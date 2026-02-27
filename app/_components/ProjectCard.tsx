@@ -1,10 +1,12 @@
 import Image from "next/image";
 import { Project } from "../_types/project";
 import ProjectFeatures from "./ProjectFeatures";
+import Link from "next/link";
 
 export default function ProjectCard({ project }: { project: Project }) {
   return (
-    <li
+    <Link
+      href={`/projects/${project.id}`}
       className={`
         relative
         border
@@ -21,8 +23,9 @@ export default function ProjectCard({ project }: { project: Project }) {
         ${project.status === "completed" && "border-blue-300"}
       `}
     >
-      <span
-        className={`
+      <li>
+        <span
+          className={`
           absolute
           top-3
           right-3
@@ -37,39 +40,40 @@ export default function ProjectCard({ project }: { project: Project }) {
         ${project.status === "completed" && "bg-blue-100 text-blue-600"}
           
         `}
-      >
-        {project.status}
-      </span>
-      <div className="flex items-start gap-3 pr-16">
-        {project.projectIcon ? (
-          <Image
-            width={40}
-            height={40}
-            src={project.projectIcon}
-            alt={`Icon from ${project.title}`}
-            className="rounded-md"
-          />
-        ) : (
-          <Image
-            width={40}
-            height={40}
-            src="/idea_lift_icon.png"
-            alt={`Icon from ${project.title}`}
-            className="rounded-md"
-          />
-        )}
+        >
+          {project.status}
+        </span>
+        <div className="flex items-start gap-3 pr-16">
+          {project.projectIcon ? (
+            <Image
+              width={40}
+              height={40}
+              src={project.projectIcon}
+              alt={`Icon from ${project.title}`}
+              className="rounded-md"
+            />
+          ) : (
+            <Image
+              width={40}
+              height={40}
+              src="/idea_lift_icon.png"
+              alt={`Icon from ${project.title}`}
+              className="rounded-md"
+            />
+          )}
 
-        <div>
-          <h2 className="text-lg font-semibold text-zinc-800 ">
-            {project.title}
-          </h2>
+          <div>
+            <h2 className="text-lg font-semibold text-zinc-800 ">
+              {project.title}
+            </h2>
 
-          <p className="mt-1 text-sm text-zinc-600 line-clamp-3">
-            {project.description}
-          </p>
+            <p className="mt-1 text-sm text-zinc-600 line-clamp-3">
+              {project.description}
+            </p>
+          </div>
         </div>
-      </div>
-      <ProjectFeatures projectId={project.id} />
-    </li>
+        <ProjectFeatures projectId={project.id} />
+      </li>
+    </Link>
   );
 }
