@@ -6,5 +6,5 @@ export type Project = {
   companyId: number;
   createdBy: number;
   projectIcon: string | null;
-  status: "active" | "archived" | "completed";
+  status: "planning" | "implementing" | "completed" | "archived" | "testing";
 };

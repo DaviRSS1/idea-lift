@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import ProjectsSection from "../_components/ProjectsSection";
 import { auth } from "../_lib/auth";
 import {
@@ -5,6 +6,10 @@ import {
   getCompanyProjects,
   getUserProjects,
 } from "../_lib/data-service";
+
+export const metadata: Metadata = {
+  title: "Projects",
+};
 
 export default async function Page() {
   const session = await auth();

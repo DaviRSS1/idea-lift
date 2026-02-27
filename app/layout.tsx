@@ -12,7 +12,10 @@ const MontserratSans = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "% / IdeaLift",
+  title: {
+    default: "IdeaLift",
+    template: "%s | IdeaLift",
+  },
   description: "Manage your projects with ideas that your employees gave you",
 };
 

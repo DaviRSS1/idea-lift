@@ -31,7 +31,7 @@ export async function getProjectFeatures(projectId: number) {
   const { data, error } = await supabase
     .from("projects_features")
     .select("*")
-    .eq("project_id", projectId);
+    .eq("projectId", projectId);
 
   if (error) {
     throw new Error("Project features could not be loaded");
@@ -85,7 +85,34 @@ export async function getUser(email: string) {
     .single();
 
   if (error) {
-    throw new Error("Users projects could not be loaded");
+    throw new Error("User could not be loaded");
+  }
+
+  return data;
+}
+
+export async function getUserById(id: number) {
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    throw new Error("User could not be loaded");
+  }
+
+  return data;
+}
+
+export async function getProjectSuggestions(projectId: number) {
+  const { data, error } = await supabase
+    .from("suggestions")
+    .select("*")
+    .eq("projectId", projectId);
+
+  if (error) {
+    throw new Error("suggestions could not be loaded");
   }
 
   return data;
