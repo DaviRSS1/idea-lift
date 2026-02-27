@@ -21,11 +21,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${MontserratSans.className} text-slate-950 min-h-screen antialiased bg-slate-50 grid grid-cols-[250px_1fr] grid-rows-[auto_1fr]`}
+        className={`${MontserratSans.className} text-zinc-900 min-h-screen antialiased bg-slate-50 grid grid-cols-[250px_1fr] grid-rows-[auto_1fr]`}
       >
         <Sidebar />
         <Header />
-        <main>{children}</main>
+        <main className="p-8">{children}</main>
       </body>
     </html>
   );

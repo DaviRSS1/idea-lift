@@ -1,9 +1,32 @@
+"use client";
+
 import Link from "next/link";
 import Logo from "./Logo";
 import { AiOutlineFolder, AiOutlineHome, AiOutlineUser } from "react-icons/ai";
 import { HiArrowLeftStartOnRectangle } from "react-icons/hi2";
+import { usePathname } from "next/navigation";
+
+const navLinks = [
+  {
+    name: "Dashboard",
+    href: "/",
+    icon: <AiOutlineHome />,
+  },
+  {
+    name: "Projects",
+    href: "/projects",
+    icon: <AiOutlineFolder />,
+  },
+  {
+    name: "User",
+    href: "/user",
+    icon: <AiOutlineUser />,
+  },
+];
 
 export default function Sidebar() {
+  const pathname = usePathname();
+
   return (
     <aside className="row-span-2 border-r border-slate-200 py-8 px-10">
       <ul className="flex flex-col justify-between h-full">
@@ -13,33 +36,17 @@ export default function Sidebar() {
           </Link>
         </li>
         <div className="flex flex-col gap-5 ">
-          <li>
-            <Link
-              href="/"
-              className="flex gap-2 items-center hover:text-lime-600 text-xl"
-            >
-              <AiOutlineHome />
-              <span className="hover:text-slate-950">Dashboard</span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/projects"
-              className="flex gap-2 items-center hover:text-lime-600 text-xl"
-            >
-              <AiOutlineFolder />
-              <span className="hover:text-slate-950">Projects</span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/user"
-              className="flex gap-2 items-center hover:text-lime-600 text-xl"
-            >
-              <AiOutlineUser />
-              <span className="hover:text-slate-950">User</span>
-            </Link>
-          </li>
+          {navLinks.map((link) => (
+            <li key={link.href}>
+              <Link
+                href={link.href}
+                className={`${pathname === link.href ? "text-lime-600" : ""} flex gap-2 items-center hover:text-lime-600 text-xl`}
+              >
+                {link.icon}
+                <span>{link.name}</span>
+              </Link>
+            </li>
+          ))}
         </div>
         <li className="mt-auto">
           <Link
