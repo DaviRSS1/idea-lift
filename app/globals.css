@@ -27,3 +27,11 @@
     }
   }
 }
+
+.custom-scrollbar::-webkit-scrollbar {
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: theme("colors.slate.400");
+  border-radius: 10px;
+}

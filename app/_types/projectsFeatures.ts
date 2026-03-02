@@ -1,17 +1,16 @@
-export type ProjectFeatures = {
-  id: number;
+export type FeatureColor =
+  | "green"
+  | "blue"
+  | "purple"
+  | "red"
+  | "orange"
+  | "pink"
+  | "teal"
+  | "yellow"
+  | "gray";
+
+export type FeatureInput = {
   title: string;
   description: string;
-  userId: number;
-  projectId: number;
-  color:
-    | "green"
-    | "blue"
-    | "purple"
-    | "red"
-    | "orange"
-    | "pink"
-    | "teal"
-    | "yellow"
-    | "gray";
+  color: FeatureColor;
 };

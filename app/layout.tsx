@@ -6,6 +6,7 @@ import Header from "./_components/Header";
 import { getUserProjects } from "./_lib/data-service";
 import { auth } from "./_lib/auth";
 import { Project } from "./_types/project";
+import { Toaster } from "react-hot-toast";
 
 const MontserratSans = Montserrat({
   subsets: ["latin"],
@@ -32,11 +33,12 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${MontserratSans.className} text-zinc-900 min-h-screen antialiased bg-slate-50 grid grid-cols-[250px_1fr] grid-rows-[auto_1fr]`}
+        className={`${MontserratSans.className} text-zinc-700 min-h-screen antialiased bg-slate-50 grid grid-cols-[250px_1fr] grid-rows-[auto_1fr] w-full max-w-full overflow-x-hidden`}
       >
+        <Toaster />
         <Sidebar userProjects={userProjects} />
         <Header />
-        <main className="p-8">{children}</main>
+        <main className="p-8 min-w-0">{children}</main>
       </body>
     </html>
   );

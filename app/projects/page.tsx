@@ -5,7 +5,10 @@ import {
   getPublicProjects,
   getCompanyProjects,
   getUserProjects,
+  getUserById,
 } from "../_lib/data-service";
+import Button from "../_components/Button";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Projects",
@@ -14,27 +17,54 @@ export const metadata: Metadata = {
 export default async function Page() {
   const session = await auth();
 
-  const [publicProjects, companyProjects, userProjects] = await Promise.all([
-    getPublicProjects(),
-    getCompanyProjects(1),
-    session?.user?.id
-      ? getUserProjects(Number(session.user.id))
-      : Promise.resolve([]),
-  ]);
+  const publicProjectsPromise = getPublicProjects();
+  const companyProjectsPromise = getCompanyProjects(1);
+
+  const userProjectsPromise = session?.user?.id
+    ? getUserProjects(Number(session.user.id))
+    : Promise.resolve([]);
+
+  const userPromise = session?.user?.id
+    ? getUserById(Number(session.user.id))
+    : Promise.resolve(null);
+
+  const [publicProjects, companyProjects, userProjects, user] =
+    await Promise.all([
+      publicProjectsPromise,
+      companyProjectsPromise,
+      userProjectsPromise,
+      userPromise,
+    ]);
 
   return (
-    <>
-      <ProjectsSection title="All projects" projects={publicProjects} />
+    <div className="relative">
+      {(user?.role === "manager" || user?.role === "owner") && (
+        <div className="absolute top-0 right-0">
+          <Button>
+            <Link href="/projects/new">Add new project</Link>
+          </Button>
+        </div>
+      )}
 
-      <ProjectsSection
-        title="Your company projects"
-        projects={companyProjects}
-      />
+      <div>
+        <ProjectsSection
+          title="All projects"
+          projects={publicProjects}
+          userId={undefined}
+        />
 
-      <ProjectsSection
-        title="Projects that you are in"
-        projects={userProjects}
-      />
-    </>
+        <ProjectsSection
+          title="Your company projects"
+          projects={companyProjects}
+          userId={session?.user?.id}
+        />
+
+        <ProjectsSection
+          title="Projects that you are in"
+          projects={userProjects}
+          userId={session?.user?.id}
+        />
+      </div>
+    </div>
   );
 }

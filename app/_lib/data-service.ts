@@ -40,11 +40,42 @@ export async function getProjectFeatures(projectId: number) {
   return data;
 }
 
+export async function getProjectFull(projectId: number) {
+  const project = await getProject(projectId);
+  const features = await getProjectFeatures(projectId);
+
+  const { data: members, error } = await supabase
+    .from("project_members")
+    .select(
+      `
+      id,
+      projectId,
+      user:users (
+        id,
+        email
+      )
+    `,
+    )
+    .eq("projectId", projectId);
+
+  if (error) {
+    throw new Error("Project members could not be loaded");
+  }
+
+  return {
+    ...project,
+    features,
+    members,
+  };
+}
+
 export async function getPublicProjects() {
   const { data, error } = await supabase
     .from("projects")
     .select("*")
-    .eq("visibility", "public");
+    .eq("visibility", "public")
+    .order("updated_at", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false });
 
   if (error) {
     throw new Error("Public projects could not be loaded");
@@ -57,10 +88,12 @@ export async function getCompanyProjects(companyId: number) {
   const { data, error } = await supabase
     .from("projects")
     .select("*")
-    .eq("companyId", companyId);
+    .eq("companyId", companyId)
+    .order("updated_at", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false });
 
   if (error) {
-    throw new Error("Company rojects could not be loaded");
+    throw new Error("Company projects could not be loaded");
   }
 
   return data;
@@ -68,13 +101,14 @@ export async function getCompanyProjects(companyId: number) {
 
 export async function getUserProjects(userId: number): Promise<Project[]> {
   const { data, error } = await supabase
-    .from("project_members")
-    .select(`project:projects (*)`)
-    .eq("userId", userId);
+    .from("user_projects_view")
+    .select("*")
+    .eq("userId", userId)
+    .order("last_activity", { ascending: false });
 
   if (error) throw new Error("User projects could not be loaded");
 
-  return data?.map((item) => item.project).flat() ?? [];
+  return data ?? [];
 }
 
 export async function getUser(email: string) {
