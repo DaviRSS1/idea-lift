@@ -55,7 +55,7 @@ export default function ProjectCard({ project }: { project: Project }) {
             <h2 className="text-lg font-semibold text-zinc-700 mt-4">
               {project.title}
             </h2>
-            <p className="mt-1 text-sm text-zinc-600 line-clamp-3">
+            <p className="mt-1 text-sm text-zinc-600 line-clamp-3 break-words">
               {project.description}
             </p>
           </div>

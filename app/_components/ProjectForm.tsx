@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Button from "@/app/_components/Button";
 import { createProject, updateProject } from "@/app/_lib/actions";
 import { FeatureInput } from "@/app/_types/projectsFeatures";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { ProjectFull } from "../_types/projectFull";
+import SpinnerMini from "./SpinnerMini";
 
 const colors = [
   "green",
@@ -26,6 +27,7 @@ type ProjectFormProps = {
 };
 
 export default function ProjectForm({ initialData, mode }: ProjectFormProps) {
+  const [isPending, startTransition] = useTransition();
   const [features, setFeatures] = useState<FeatureInput[]>(
     initialData?.features ?? [],
   );
@@ -71,27 +73,30 @@ export default function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const router = useRouter();
 
   async function handleSubmit(formData: FormData) {
-    try {
-      let result;
+    startTransition(async () => {
+      try {
+        let result;
 
-      if (mode === "edit" && initialData) {
-        result = await updateProject(
-          initialData.id,
-          formData,
-          features,
-          members,
-        );
-        toast.success("Project updated successfully");
-      } else {
-        result = await createProject(formData, features, members);
-        toast.success("Project created successfully");
+        if (mode === "edit" && initialData) {
+          result = await updateProject(
+            initialData.id,
+            formData,
+            features,
+            members,
+          );
+          toast.success("Project updated successfully");
+        } else {
+          result = await createProject(formData, features, members);
+          toast.success("Project created successfully");
+        }
+
+        // O isPending continuará true enquanto a página não terminar de carregar
+        router.push(`/projects/${result.id}`);
+      } catch (error) {
+        toast.error("Something went wrong");
+        console.error(error);
       }
-
-      router.push(`/projects/${result.id}`);
-    } catch (error) {
-      toast.error("Something went wrong");
-      console.error(error);
-    }
+    });
   }
 
   return (
@@ -293,7 +298,13 @@ export default function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
         <div className="pt-4 flex justify-end">
           <Button type="submit">
-            {mode === "edit" ? "Update project" : "Create project"}
+            {isPending ? (
+              <SpinnerMini />
+            ) : mode === "edit" ? (
+              "Update project"
+            ) : (
+              "Create project"
+            )}
           </Button>
         </div>
       </form>

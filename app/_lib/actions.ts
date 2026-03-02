@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { auth } from "../_lib/auth";
 import { FeatureInput } from "../_types/projectsFeatures";
 import { supabase } from "./supabase";
@@ -91,6 +92,10 @@ export async function createProject(
     }
   }
 
+  const filteredMembers = members.filter(
+    (email) => email !== session.user?.email,
+  );
+
   const { error: memberError } = await supabase.from("project_members").insert({
     projectId: project.id,
     userId: user.id,
@@ -101,30 +106,22 @@ export async function createProject(
     throw new Error("Project member could not be created.");
   }
 
-  if (members.length > 0) {
+  if (filteredMembers.length > 0) {
     const { data: users, error: usersError } = await supabase
       .from("users")
       .select("id, email")
-      .in("email", members);
+      .in("email", filteredMembers);
 
-    if (usersError) {
-      throw new Error("Members could not be found.");
-    }
-
-    const membersToInsert = users.map((u) => ({
-      projectId: project.id,
-      userId: u.id,
-    }));
-
-    const { error: membersError } = await supabase
-      .from("project_members")
-      .insert(membersToInsert);
-
-    if (membersError) {
-      throw new Error("Members could not be added to project.");
+    if (!usersError && users.length > 0) {
+      const membersToInsert = users.map((u) => ({
+        projectId: project.id,
+        userId: u.id,
+      }));
+      await supabase.from("project_members").insert(membersToInsert);
     }
   }
 
+  revalidatePath("/projects");
   return { id: project.id, project };
 }
 
@@ -152,7 +149,6 @@ export async function updateProject(
 
   const image = formData.get("projectIcon") as File;
 
-  // 1️⃣ Atualiza dados principais
   const { data: project, error: updateError } = await supabase
     .from("projects")
     .update({
@@ -171,7 +167,6 @@ export async function updateProject(
     throw new Error("Project could not be updated.");
   }
 
-  // 2️⃣ Atualiza imagem (se enviou nova)
   if (image && image.size > 0) {
     const imageName = `${Date.now()}-${image.name.replaceAll(" ", "-")}`;
 
@@ -196,10 +191,8 @@ export async function updateProject(
     }
   }
 
-  // 3️⃣ Remove features antigas
   await supabase.from("projects_features").delete().eq("projectId", projectId);
 
-  // 4️⃣ Insere features novas
   if (features.length > 0) {
     const featuresToInsert = features.map((feature) => ({
       ...feature,
@@ -216,10 +209,8 @@ export async function updateProject(
     }
   }
 
-  // 5️⃣ Remove membros antigos
   await supabase.from("project_members").delete().eq("projectId", projectId);
 
-  // 6️⃣ Sempre adiciona o usuário atual como membro
   const { error: ownerMemberError } = await supabase
     .from("project_members")
     .insert({
@@ -230,31 +221,31 @@ export async function updateProject(
   if (ownerMemberError) {
     throw new Error("Project owner could not be re-added.");
   }
+  const filteredMembers = members.filter((email) => email !== user.email);
 
-  // 7️⃣ Adiciona novos membros
-  if (members.length > 0) {
+  if (filteredMembers.length > 0) {
     const { data: users, error: usersError } = await supabase
       .from("users")
       .select("id, email")
-      .in("email", members);
+      .in("email", filteredMembers); // Usa a lista filtrada aqui
 
-    if (usersError) {
-      throw new Error("Members could not be found.");
-    }
+    if (usersError) throw new Error("Members could not be found.");
 
-    const membersToInsert = users.map((u) => ({
-      projectId,
-      userId: u.id,
-    }));
+    if (users && users.length > 0) {
+      const membersToInsert = users.map((u) => ({
+        projectId,
+        userId: u.id,
+      }));
 
-    const { error: membersError } = await supabase
-      .from("project_members")
-      .insert(membersToInsert);
+      const { error: membersError } = await supabase
+        .from("project_members")
+        .insert(membersToInsert);
 
-    if (membersError) {
-      throw new Error("Members could not be updated.");
+      if (membersError) throw new Error("Members could not be updated.");
     }
   }
+
+  revalidatePath("/projects");
 
   return { id: projectId, project };
 }

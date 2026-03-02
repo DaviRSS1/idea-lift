@@ -78,9 +78,9 @@ export default async function Page({ params }: Props) {
           </div>
         </div>
         {canEdit && (
-          <Button>
-            <Link href={`/projects/${projectID}/edit`}>Edit</Link>
-          </Button>
+          <Link href={`/projects/${projectID}/edit`}>
+            <Button>Edit</Button>
+          </Link>
         )}
       </div>
 

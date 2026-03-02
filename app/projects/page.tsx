@@ -40,9 +40,9 @@ export default async function Page() {
     <div className="relative">
       {(user?.role === "manager" || user?.role === "owner") && (
         <div className="absolute top-0 right-0">
-          <Button>
-            <Link href="/projects/new">Add new project</Link>
-          </Button>
+          <Link href="/projects/new">
+            <Button>Add new project</Button>
+          </Link>
         </div>
       )}
 

@@ -16,8 +16,8 @@
     width: 20px;
     aspect-ratio: 1;
     border-radius: 50%;
-    border: 2px solid theme("colors.lime.100");
-    border-right-color: transparent;
+    border: 2px solid theme("colors.lime.700");
+    border-right-color: theme("colors.lime.100");
     animation: rotate 1s infinite linear;
   }
 
