@@ -233,7 +233,7 @@ export async function updateProject(
     const { data: users, error: usersError } = await supabase
       .from("users")
       .select("id, email")
-      .in("email", filteredMembers); // Usa a lista filtrada aqui
+      .in("email", filteredMembers);
 
     if (usersError) throw new Error("Members could not be found.");
 
@@ -275,4 +275,43 @@ export async function voteSuggestionAction(
   vote: VoteValue,
 ) {
   return await voteSuggestion(suggestionId, userId, vote);
+}
+
+export async function updateCompany(companyId: number, formData: FormData) {
+  const updates = {
+    name: formData.get("name") as string,
+    domain: formData.get("domain") as string,
+    description: formData.get("description") as string,
+    website: formData.get("website") as string,
+    location: formData.get("location") as string,
+  };
+
+  const { error } = await supabase
+    .from("companies")
+    .update(updates)
+    .eq("id", companyId);
+
+  if (error) throw new Error("Company could not be updated");
+  revalidatePath("/company");
+}
+
+export async function addCompanyMember(companyId: number, formData: FormData) {
+  const email = formData.get("email") as string;
+  const role = formData.get("role") as string;
+
+  const { data: user, error: userError } = await supabase
+    .from("users")
+    .select("id")
+    .eq("email", email)
+    .single();
+
+  if (userError || !user) throw new Error("User not found with this email");
+
+  const { error } = await supabase
+    .from("company_members")
+    .insert([{ companyId, userId: user.id, role }]);
+
+  if (error) throw new Error("Could not add member");
+
+  revalidatePath("/company");
 }

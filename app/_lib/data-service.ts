@@ -1,4 +1,5 @@
 import { Project } from "../_types/project";
+import { Role } from "../_types/role";
 import { supabase } from "./supabase";
 
 ///////// GET
@@ -151,6 +152,41 @@ export async function getProjectSuggestions(projectId: number) {
   }
 
   return data;
+}
+
+export async function getCompanyData(companyId: number, currentUserId: number) {
+  const { data: members } = await supabase
+    .from("company_members")
+    .select("*, users(id, name, email, avatar)")
+    .eq("companyId", companyId);
+
+  const currentMember = members?.find((m) => m.userId === currentUserId);
+  const isOwner = currentMember?.role === "owner";
+
+  return { members, isOwner };
+}
+
+export async function getUserCompanyRole(userId: number): Promise<Role | null> {
+  const { data, error } = await supabase
+    .from("company_members")
+    .select("role")
+    .eq("userId", userId)
+    .single();
+
+  if (error || !data) return null;
+
+  return data.role as Role;
+}
+
+export async function getCompanyByUserId(userId: number) {
+  const { data, error } = await supabase
+    .from("users")
+    .select("companyId")
+    .eq("id", userId)
+    .single();
+
+  if (error) throw new Error("Could not get company");
+  return data?.companyId ?? null;
 }
 
 //////// CREATE

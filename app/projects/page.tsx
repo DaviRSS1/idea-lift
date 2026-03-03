@@ -5,7 +5,7 @@ import {
   getPublicProjects,
   getCompanyProjects,
   getUserProjects,
-  getUserById,
+  getUserCompanyRole,
 } from "../_lib/data-service";
 import Button from "../_components/Button";
 import Link from "next/link";
@@ -24,21 +24,21 @@ export default async function Page() {
     ? getUserProjects(Number(session.user.id))
     : Promise.resolve([]);
 
-  const userPromise = session?.user?.id
-    ? getUserById(Number(session.user.id))
+  const userRolePromise = session?.user?.id
+    ? getUserCompanyRole(Number(session.user.id))
     : Promise.resolve(null);
 
-  const [publicProjects, companyProjects, userProjects, user] =
+  const [publicProjects, companyProjects, userProjects, userRole] =
     await Promise.all([
       publicProjectsPromise,
       companyProjectsPromise,
       userProjectsPromise,
-      userPromise,
+      userRolePromise,
     ]);
 
   return (
     <div className="relative">
-      {(user?.role === "manager" || user?.role === "owner") && (
+      {(userRole === "manager" || userRole === "owner") && (
         <div className="absolute top-0 right-0">
           <Link href="/projects/new">
             <Button>Add new project</Button>

@@ -6,8 +6,7 @@ import ProjectProgress from "@/app/_components/ProjectProgress";
 import Spinner from "@/app/_components/Spinner";
 import Suggestions from "@/app/_components/Suggestions";
 import { auth } from "@/app/_lib/auth";
-import { getProject } from "@/app/_lib/data-service";
-import { supabase } from "@/app/_lib/supabase";
+import { getProject, getUserCompanyRole } from "@/app/_lib/data-service";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -29,27 +28,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function Page({ params }: Props) {
   const { projectID } = await params;
 
-  const [project] = await Promise.all([getProject(Number(projectID))]);
-
   const session = await auth();
 
-  let canEdit = false;
+  const [project, userRole] = await Promise.all([
+    getProject(Number(projectID)),
+    session?.user?.id
+      ? getUserCompanyRole(Number(session.user.id))
+      : Promise.resolve(null),
+  ]);
 
-  if (session) {
-    const { data: user } = await supabase
-      .from("users")
-      .select("id, role, companyId")
-      .eq("id", Number(session.user?.id))
-      .single();
-
-    if (
-      user &&
-      user.companyId === project.companyId &&
-      (user.role === "owner" || user.role === "manager")
-    ) {
-      canEdit = true;
-    }
-  }
+  const canEdit =
+    !!userRole && (userRole === "owner" || userRole === "manager");
 
   if (!project) return <div className="p-10">Project not found</div>;
 

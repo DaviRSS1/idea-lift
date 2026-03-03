@@ -7,6 +7,7 @@ import { HiArrowLeftStartOnRectangle } from "react-icons/hi2";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Project } from "../_types/project";
+import { FaRegBuilding } from "react-icons/fa";
 
 const navLinks = [
   {
@@ -18,6 +19,11 @@ const navLinks = [
     name: "Projects",
     href: "/projects",
     icon: <AiOutlineFolder />,
+  },
+  {
+    name: "Company",
+    href: "/company",
+    icon: <FaRegBuilding />,
   },
   {
     name: "User",

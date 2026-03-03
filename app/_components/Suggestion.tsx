@@ -9,24 +9,35 @@ import toast from "react-hot-toast";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { VoteValue } from "../_lib/data-service";
 import SpinnerMini from "./SpinnerMini";
+import { useRouter } from "next/navigation";
 
 type SuggestionProps = {
   suggestion: Suggestions;
-  user: User;
+  author: User;
+  currentUser: User | null;
 };
 
-export default function Suggestion({ suggestion, user }: SuggestionProps) {
+export default function Suggestion({
+  suggestion,
+  author,
+  currentUser,
+}: SuggestionProps) {
   const [score, setScore] = useState(suggestion.upvotesCount ?? 0);
   const [userVote, setUserVote] = useState<VoteValue>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
+    if (!currentUser) {
+      setIsInitialLoading(false);
+      return;
+    }
     async function fetchUserVote() {
       try {
         setIsInitialLoading(true);
         const res = await fetch(
-          `/api/getUserVote?suggestionId=${suggestion.id}&userId=${user.id}`,
+          `/api/getUserVote?suggestionId=${suggestion.id}&userId=${currentUser?.id}`,
         );
         const data = await res.json();
         setUserVote((data.vote as VoteValue) ?? 0);
@@ -37,10 +48,15 @@ export default function Suggestion({ suggestion, user }: SuggestionProps) {
       }
     }
     fetchUserVote();
-  }, [suggestion.id, user.id]);
+  }, [suggestion.id, currentUser?.id, currentUser]);
 
   const handleVote = async (delta: 1 | -1) => {
     if (isLoading || isInitialLoading) return;
+
+    if (!currentUser) {
+      router.push("/login");
+      return;
+    }
 
     const newVote: VoteValue = userVote === delta ? 0 : delta;
     const scoreDiff = newVote - userVote;
@@ -52,7 +68,7 @@ export default function Suggestion({ suggestion, user }: SuggestionProps) {
       setIsLoading(true);
       const result = await voteSuggestionAction(
         suggestion.id,
-        user.id,
+        currentUser?.id,
         newVote,
       );
       setScore(result.newScore);
@@ -71,10 +87,10 @@ export default function Suggestion({ suggestion, user }: SuggestionProps) {
         <button
           onClick={() => handleVote(1)}
           disabled={isInitialLoading || isLoading}
-          className={`p-1.5 rounded-lg transition-all ${
+          className={`p-1.5 rounded-lg transition-all cursor-pointer ${
             userVote === 1
               ? "bg-lime-100 text-lime-700 shadow-sm"
-              : "text-slate-400 hover:bg-slate-50 disabled:opacity-50"
+              : "text-slate-400 hover:bg-slate-100 disabled:opacity-50"
           }`}
         >
           <ChevronUp size={24} strokeWidth={userVote === 1 ? 3 : 2} />
@@ -101,10 +117,10 @@ export default function Suggestion({ suggestion, user }: SuggestionProps) {
         <button
           onClick={() => handleVote(-1)}
           disabled={isInitialLoading || isLoading}
-          className={`p-1.5 rounded-lg transition-all ${
+          className={`p-1.5 rounded-lg transition-all cursor-pointer ${
             userVote === -1
               ? "bg-red-100 text-red-700 shadow-sm"
-              : "text-slate-400 hover:bg-slate-50 disabled:opacity-50"
+              : "text-slate-400 hover:bg-slate-100 disabled:opacity-50"
           }`}
         >
           <ChevronDown size={24} strokeWidth={userVote === -1 ? 3 : 2} />
@@ -114,8 +130,8 @@ export default function Suggestion({ suggestion, user }: SuggestionProps) {
       <div className="flex-1 pt-1">
         <div className="flex items-center gap-2 mb-2">
           <Image
-            src={user.avatar}
-            alt={user.name}
+            src={author.avatar}
+            alt={author.name}
             width={32}
             height={32}
             className="rounded-full border border-slate-100"

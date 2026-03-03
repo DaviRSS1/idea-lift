@@ -22,13 +22,11 @@ export default function ProjectsSection({
       </h2>
 
       {isPrivateSection && !userId ? (
-        <div className="p-6 rounded-xl  text-center space-y-3">
-          <p className="text-zinc-600">
-            You need to be logged in to see this section.
-          </p>
+        <div className="p-6 text-center space-y-3 text-slate-500">
+          <p>You must to be logged in to see this section.</p>
           <Link
             href="/login"
-            className="inline-block px-4 py-2 rounded-lg bg-zinc-700 text-white text-sm font-medium hover:bg-zinc-800 transition"
+            className="inline-block px-4  py-2 rounded-lg bg-lime-200 text-sm font-medium hover:bg-lime-300 transition text-lime-700"
           >
             Sign in
           </Link>
