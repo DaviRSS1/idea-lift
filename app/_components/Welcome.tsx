@@ -6,8 +6,6 @@ export default function Welcome() {
   return (
     <div className=" flex items-center justify-center bg-slate-50">
       <div className="max-w-lg w-full flex flex-col items-center text-center gap-8">
-        <Logo />
-
         <div className="space-y-3">
           <h1 className="text-4xl font-semibold text-slate-800 leading-tight">
             Where great ideas
