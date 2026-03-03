@@ -5,7 +5,10 @@ import { getUserById } from "../_lib/data-service";
 
 export default async function User() {
   const session = await auth();
-  const user = await getUserById(Number(session?.user?.id));
+  const user = session?.user?.id
+    ? await getUserById(Number(session.user.id))
+    : null;
+
   return (
     <div>
       {session?.user?.image ? (
