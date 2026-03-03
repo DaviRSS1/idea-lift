@@ -6,6 +6,7 @@ import {
   getCompanyProjects,
   getUserProjects,
   getUserCompanyRole,
+  getUserById,
 } from "../_lib/data-service";
 import Button from "../_components/Button";
 import Link from "next/link";
@@ -17,24 +18,18 @@ export const metadata: Metadata = {
 export default async function Page() {
   const session = await auth();
 
-  const publicProjectsPromise = getPublicProjects();
-  const companyProjectsPromise = getCompanyProjects(1);
+  const userId = session?.user?.id ? Number(session.user.id) : null;
 
-  const userProjectsPromise = session?.user?.id
-    ? getUserProjects(Number(session.user.id))
-    : Promise.resolve([]);
+  const [publicProjects, userProjects, userRole, user] = await Promise.all([
+    getPublicProjects(),
+    userId ? getUserProjects(userId) : Promise.resolve([]),
+    userId ? getUserCompanyRole(userId) : Promise.resolve(null),
+    userId ? getUserById(userId) : Promise.resolve([]),
+  ]);
 
-  const userRolePromise = session?.user?.id
-    ? getUserCompanyRole(Number(session.user.id))
-    : Promise.resolve(null);
-
-  const [publicProjects, companyProjects, userProjects, userRole] =
-    await Promise.all([
-      publicProjectsPromise,
-      companyProjectsPromise,
-      userProjectsPromise,
-      userRolePromise,
-    ]);
+  const companyProjects = userRole
+    ? await getCompanyProjects(user.companyId)
+    : [];
 
   return (
     <div className="relative">

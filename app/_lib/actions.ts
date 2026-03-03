@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { auth } from "../_lib/auth";
+import { auth, signIn, signOut } from "./auth";
 import { FeatureInput } from "../_types/projectsFeatures";
 import { supabase } from "./supabase";
 import {
@@ -10,6 +10,14 @@ import {
   voteSuggestion,
   VoteValue,
 } from "./data-service";
+
+export async function signInAction() {
+  await signIn("google", { redirectTo: "/account" });
+}
+
+export async function signOutAction() {
+  await signOut({ redirectTo: "/" });
+}
 
 export async function createProject(
   formData: FormData,
@@ -312,6 +320,85 @@ export async function addCompanyMember(companyId: number, formData: FormData) {
     .insert([{ companyId, userId: user.id, role }]);
 
   if (error) throw new Error("Could not add member");
+
+  revalidatePath("/company");
+}
+
+export async function createCompanyAction(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Not authenticated");
+
+  const userId = Number(session.user.id);
+
+  const { data: company, error } = await supabase
+    .from("companies")
+    .insert([
+      {
+        name: formData.get("name") as string,
+        domain: formData.get("domain") as string,
+        description: formData.get("description") as string,
+      },
+    ])
+    .select()
+    .single();
+
+  if (error) throw new Error("Could not create company");
+
+  await supabase.from("company_members").insert([
+    {
+      companyId: company.id,
+      userId,
+      role: "owner",
+    },
+  ]);
+
+  await supabase
+    .from("users")
+    .update({ companyId: company.id })
+    .eq("id", userId);
+
+  revalidatePath("/company");
+}
+
+export async function requestJoinCompanyAction(companyId: number) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Not authenticated");
+
+  const { error } = await supabase.from("company_requests").insert([
+    {
+      userId: Number(session.user.id),
+      companyId,
+    },
+  ]);
+
+  if (error?.code === "23505")
+    throw new Error("You already sent a request to this company");
+  if (error) throw new Error("Could not send request");
+
+  revalidatePath("/company");
+}
+
+export async function deleteCompanyAction(companyId: number) {
+  const { error } = await supabase
+    .from("companies")
+    .delete()
+    .eq("id", companyId);
+
+  if (error) throw new Error("Could not delete company");
+
+  revalidatePath("/company");
+}
+
+export async function leaveCompanyAction(userId: number, companyId: number) {
+  const { error } = await supabase
+    .from("company_members")
+    .delete()
+    .eq("userId", userId)
+    .eq("companyId", companyId);
+
+  if (error) throw new Error("Could not leave company");
+
+  await supabase.from("users").update({ companyId: null }).eq("id", userId);
 
   revalidatePath("/company");
 }

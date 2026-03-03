@@ -35,3 +35,7 @@
   background-color: theme("colors.slate.400");
   border-radius: 10px;
 }
+
+button {
+  cursor: pointer;
+}

@@ -189,6 +189,15 @@ export async function getCompanyByUserId(userId: number) {
   return data?.companyId ?? null;
 }
 
+export async function getCompanies() {
+  const { data, error } = await supabase
+    .from("companies")
+    .select("id, name, domain");
+
+  if (error) throw new Error("Companies could not be loaded");
+  return data;
+}
+
 //////// CREATE
 
 export async function createUser(newUser: object) {

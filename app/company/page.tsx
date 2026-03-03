@@ -1,5 +1,9 @@
 import { auth } from "@/app/_lib/auth";
-import { getCompanyData } from "@/app/_lib/data-service";
+import {
+  getCompanies,
+  getCompanyData,
+  getUserById,
+} from "@/app/_lib/data-service";
 import { supabase } from "@/app/_lib/supabase";
 import type { Metadata } from "next";
 import Image from "next/image";
@@ -9,6 +13,8 @@ import Spinner from "@/app/_components/Spinner";
 import ButtonEditCompany from "../_components/ButtonEditCompany";
 import MembersList from "../_components/MembersList";
 import AddMemberForm from "../_components/AddMemberForm";
+import NoCompanyForm from "../_components/NoCompanyForm";
+import ButtonLeaveCompany from "../_components/ButtonLeaveCompany";
 
 export const metadata: Metadata = {
   title: "Company",
@@ -31,18 +37,11 @@ export default async function CompanyPage() {
     );
   }
 
-  const { data: currentUser } = await supabase
-    .from("users")
-    .select("id, name, email, companyId, avatar")
-    .eq("id", Number(session.user.id))
-    .single();
+  const currentUser = await getUserById(Number(session.user.id));
 
   if (!currentUser?.companyId) {
-    return (
-      <div className="p-10 text-slate-500 italic">
-        You are not associated with any company.
-      </div>
-    );
+    const companies = await getCompanies();
+    return <NoCompanyForm companies={companies} />;
   }
 
   const { data: company } = await supabase
@@ -97,7 +96,15 @@ export default async function CompanyPage() {
           </div>
         </div>
 
-        {isOwner && <ButtonEditCompany company={company} />}
+        <div>
+          {isOwner && <ButtonEditCompany company={company} />}
+          {!isOwner && (
+            <ButtonLeaveCompany
+              userId={currentUser.id}
+              companyId={currentUser.companyId}
+            />
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-5 gap-10">

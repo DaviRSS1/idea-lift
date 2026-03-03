@@ -1,13 +1,28 @@
 import Link from "next/link";
+import { auth } from "../_lib/auth";
+import Image from "next/image";
 
-export default function User() {
+export default async function User() {
+  const session = await auth();
   return (
     <div>
-      <span>
-        <Link href="/login" className="text-xl hover:text-lime-600">
-          Login
+      {session?.user?.image ? (
+        <Link href="/account">
+          <Image
+            src={session?.user.image}
+            height={30}
+            width={30}
+            alt={`Avatar of ${session?.user.name}`}
+            className="rounded-full"
+          />
         </Link>
-      </span>
+      ) : (
+        <span>
+          <Link href="/login" className="text-xl hover:text-lime-600">
+            Login
+          </Link>
+        </span>
+      )}
     </div>
   );
 }
