@@ -29,7 +29,7 @@ export default function ProjectCard({ project }: { project: Project }) {
         `}
       >
         <span
-          className={`absolute top-3 right-3 text-xs font-semibold px-3 py-1 rounded-full 
+          className={`absolute top-3 right-3 text-xs font-semibold px-3 py-1 rounded-full capitalize 
           ${project.status === "completed" && "bg-lime-100 text-lime-600"}
           ${project.status === "implementing" && "bg-amber-100 text-amber-600"}
           ${project.status === "testing" && "bg-red-100 text-red-600"}
