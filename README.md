@@ -1,36 +1,149 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 💡 IdeaLift
 
-## Getting Started
+**IdeaLift** is a full-stack web application built for **study purposes**, developed to practice modern Next.js App Router architecture and full-stack development patterns.
 
-First, run the development server:
+This application allows companies to **manage projects**, **collect suggestions from team members**, and **organize their workforce** — all in one collaborative platform.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🌐 Live Demo
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+👉 https://idea-lift.vercel.app/
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🚀 Features
 
-To learn more about Next.js, take a look at the following resources:
+### 📁 Project Management
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Create, edit and delete projects
+- Upload project icons to Supabase Storage
+- Set project visibility (public / private)
+- Track project status (active, completed, archived, etc.)
+- Project progress indicator
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 💡 Suggestions System
 
-## Deploy on Vercel
+- Team members can submit suggestions on any project
+- Upvote and downvote suggestions
+- Score calculated in real time
+- Suggestions sorted by most voted
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 🏢 Company Management
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Create your own company or request to join an existing one
+- Owner can edit company info (name, domain, description, website, location)
+- Manage team members and their roles
+- Approve or reject join requests
+- Role-based access control (owner / manager / employee)
+
+### 👥 Members & Roles
+
+- Three role levels: **Owner**, **Manager**, **Employee**
+- Role-based permissions across the platform
+- Add members directly by email
+- Change member roles or remove them from the company
+
+### 🔔 Notifications
+
+- Real-time notifications for:
+  - New suggestions on your projects
+  - Join requests to your company (owner/manager)
+  - New projects created in your company
+  - Being added to a project
+  - Join request approved
+- Unread badge counter
+- Dropdown notification panel in the header
+
+### 🔍 Search
+
+- Real-time project search with dropdown results
+- Dedicated search results page
+- Debounced input for performance
+
+### 👤 Account
+
+- Update profile name and photo
+- Avatar upload to Supabase Storage
+- Delete account with cascade cleanup
+
+### 🔐 Authentication
+
+- Google OAuth via NextAuth
+- Protected routes
+- Session-based access control
+- Auto user creation on first sign-in
+
+---
+
+## 🧠 Concepts Practiced
+
+This project was built to reinforce modern full-stack React and Next.js architecture:
+
+- Next.js App Router (server and client components)
+- Server Actions for mutations
+- Parallel data fetching with `Promise.all`
+- Role-based access control across server and client
+- Supabase integration (Database + Auth + Storage)
+- API Routes for client-side data fetching
+- Optimistic UI updates
+- Debounced search input
+- Notification system with real-time badge
+- Component separation (server wrapper + client interactivity)
+- TypeScript throughout
+
+---
+
+## 🛠️ Built With
+
+- Next.js 14 (App Router)
+- TypeScript
+- Tailwind CSS
+- Supabase (Database + Storage)
+- NextAuth v5 (Google OAuth)
+- React Hot Toast
+- Lucide React / React Icons
+- Vercel (Deployment)
+
+---
+
+## 🗄️ Database Structure
+
+The backend is powered by **Supabase** with the following main tables:
+
+- `users` — platform users
+- `companies` — company profiles
+- `company_members` — user-company relationships with roles
+- `company_requests` — pending join requests
+- `projects` — project records
+- `project_members` — user-project relationships
+- `projects_features` — project feature tags
+- `suggestions` — suggestions submitted per project
+- `suggestion_votes` — individual votes per suggestion
+- `notifications` — in-app notification system
+
+---
+
+## 🎯 Purpose of the Project
+
+This application was developed for **advanced Next.js and full-stack practice**, focusing on building a real-world, production-style collaborative platform.
+
+The goal was to simulate a SaaS-level architecture while strengthening knowledge in:
+
+- Server vs client component boundaries
+- Full-stack data flow with Server Actions
+- Permission systems without a dedicated auth library
+- Scalable Supabase schema design
+- Production deployment with Vercel
+
+---
+
+## 👤 Author
+
+Developed by **Davi Reghim**
+
+🔗 LinkedIn:
+https://www.linkedin.com/in/davi-reghim-13b995272/
+
+💻 GitHub:
+https://github.com/DaviRSS1
