@@ -2,6 +2,7 @@ import { auth } from "@/app/_lib/auth";
 import {
   getCompanies,
   getCompanyData,
+  getCompanyRequests,
   getUserById,
 } from "@/app/_lib/data-service";
 import { supabase } from "@/app/_lib/supabase";
@@ -15,6 +16,7 @@ import MembersList from "../_components/MembersList";
 import AddMemberForm from "../_components/AddMemberForm";
 import NoCompanyForm from "../_components/NoCompanyForm";
 import ButtonLeaveCompany from "../_components/ButtonLeaveCompany";
+import CompanyRequests from "../_components/CompanyRequests";
 
 export const metadata: Metadata = {
   title: "Company",
@@ -54,15 +56,19 @@ export default async function CompanyPage() {
     return <div className="p-10 text-slate-500 italic">Company not found.</div>;
   }
 
-  const { members, isOwner } = await getCompanyData(
-    currentUser.companyId,
-    currentUser.id,
-  );
+  const [{ members, isOwner }, requests] = await Promise.all([
+    getCompanyData(currentUser.companyId, currentUser.id),
+    getCompanyRequests(currentUser.companyId),
+  ]);
 
   const ownerCount = members?.filter((m) => m.role === "owner").length ?? 0;
   const managerCount = members?.filter((m) => m.role === "manager").length ?? 0;
   const employeeCount =
     members?.filter((m) => m.role === "employee").length ?? 0;
+
+  const currentMemberRole = members?.find(
+    (m) => m.userId === currentUser.id,
+  )?.role;
 
   return (
     <div className="space-y-10">
@@ -172,6 +178,13 @@ export default async function CompanyPage() {
           </div>
         </div>
       </div>
+
+      {(currentMemberRole === "owner" || currentMemberRole === "manager") && (
+        <CompanyRequests
+          requests={requests}
+          companyId={currentUser.companyId}
+        />
+      )}
 
       <section className="space-y-4">
         <h3 className="text-sm font-semibold  uppercase tracking-wide">

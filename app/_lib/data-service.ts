@@ -117,7 +117,7 @@ export async function getUser(email: string) {
     .from("users")
     .select("*")
     .eq("email", email)
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw new Error("User could not be loaded");
@@ -196,6 +196,41 @@ export async function getCompanies() {
 
   if (error) throw new Error("Companies could not be loaded");
   return data;
+}
+
+export async function getCompanyRequests(companyId: number) {
+  const { data, error } = await supabase
+    .from("company_requests")
+    .select("*, users(id, name, email, avatar)")
+    .eq("companyId", companyId)
+    .eq("status", "pending");
+
+  if (error) throw new Error("Could not load requests");
+  return data ?? [];
+}
+
+export async function getUnreadNotifications(userId: number) {
+  const { data, error } = await supabase
+    .from("notifications")
+    .select("*")
+    .eq("userId", userId)
+    .eq("read", false)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error("Could not load notifications");
+  return data ?? [];
+}
+
+export async function getNotifications(userId: number) {
+  const { data, error } = await supabase
+    .from("notifications")
+    .select("*")
+    .eq("userId", userId)
+    .order("created_at", { ascending: false })
+    .limit(30);
+
+  if (error) throw new Error("Could not load notifications");
+  return data ?? [];
 }
 
 //////// CREATE

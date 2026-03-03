@@ -7,9 +7,17 @@ import { supabase } from "./supabase";
 import {
   createSuggestion,
   deleteProject,
+  getUserById,
   voteSuggestion,
   VoteValue,
 } from "./data-service";
+import { Role } from "../_types/role";
+import {
+  notifyJoinRequest,
+  notifyNewProject,
+  notifyNewSuggestion,
+  notifyRequestApproved,
+} from "./notifications";
 
 export async function signInAction() {
   await signIn("google", { redirectTo: "/account" });
@@ -17,6 +25,24 @@ export async function signInAction() {
 
 export async function signOutAction() {
   await signOut({ redirectTo: "/" });
+}
+
+async function getUserWithRole(sessionUserId: number) {
+  const { data: user } = await supabase
+    .from("users")
+    .select("*")
+    .eq("id", sessionUserId)
+    .single();
+
+  if (!user) throw new Error("User not found.");
+
+  const { data: member } = await supabase
+    .from("company_members")
+    .select("role")
+    .eq("userId", sessionUserId)
+    .single();
+
+  return { ...user, role: member?.role ?? null };
 }
 
 export async function createProject(
@@ -28,13 +54,7 @@ export async function createProject(
 
   if (!session) throw new Error("You must be logged in.");
 
-  const { data: user } = await supabase
-    .from("users")
-    .select("*")
-    .eq("id", Number(session.user?.id))
-    .single();
-
-  if (!user) throw new Error("User not found.");
+  const user = await getUserWithRole(Number(session.user?.id));
 
   if (user.role !== "owner" && user.role !== "manager") {
     throw new Error("You do not have permission.");
@@ -135,6 +155,13 @@ export async function createProject(
     }
   }
 
+  await notifyNewProject(
+    project.companyId,
+    project.title,
+    project.id,
+    project.createdBy,
+  );
+
   revalidatePath("/projects");
   return { id: project.id, project };
 }
@@ -149,13 +176,7 @@ export async function updateProject(
 
   if (!session) throw new Error("You must be logged in.");
 
-  const { data: user } = await supabase
-    .from("users")
-    .select("*")
-    .eq("id", Number(session.user?.id))
-    .single();
-
-  if (!user) throw new Error("User not found.");
+  const user = await getUserWithRole(Number(session.user?.id));
 
   if (user.role !== "owner" && user.role !== "manager") {
     throw new Error("You do not have permission.");
@@ -274,6 +295,10 @@ export async function createSuggestionAction(
   authorId: number,
 ) {
   await createSuggestion(projectID, content, authorId);
+
+  const author = await getUserById(authorId);
+  await notifyNewSuggestion(projectID, author.name);
+
   revalidatePath("/projects");
 }
 
@@ -309,7 +334,7 @@ export async function addCompanyMember(companyId: number, formData: FormData) {
 
   const { data: user, error: userError } = await supabase
     .from("users")
-    .select("id")
+    .select("id, name")
     .eq("email", email)
     .single();
 
@@ -320,6 +345,14 @@ export async function addCompanyMember(companyId: number, formData: FormData) {
     .insert([{ companyId, userId: user.id, role }]);
 
   if (error) throw new Error("Could not add member");
+
+  const { data: company } = await supabase
+    .from("companies")
+    .select("name")
+    .eq("id", companyId)
+    .single();
+
+  await notifyRequestApproved(user.id, company?.name ?? "your company");
 
   revalidatePath("/company");
 }
@@ -364,16 +397,18 @@ export async function requestJoinCompanyAction(companyId: number) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Not authenticated");
 
-  const { error } = await supabase.from("company_requests").insert([
-    {
-      userId: Number(session.user.id),
-      companyId,
-    },
-  ]);
+  const userId = Number(session.user.id);
+
+  const { error } = await supabase
+    .from("company_requests")
+    .insert([{ userId, companyId }]);
 
   if (error?.code === "23505")
     throw new Error("You already sent a request to this company");
   if (error) throw new Error("Could not send request");
+
+  const user = await getUserById(userId);
+  await notifyJoinRequest(companyId, user.name);
 
   revalidatePath("/company");
 }
@@ -401,4 +436,128 @@ export async function leaveCompanyAction(userId: number, companyId: number) {
   await supabase.from("users").update({ companyId: null }).eq("id", userId);
 
   revalidatePath("/company");
+}
+
+export async function approveRequestAction(
+  requestId: number,
+  userId: number,
+  companyId: number,
+) {
+  await supabase
+    .from("company_requests")
+    .update({ status: "approved" })
+    .eq("id", requestId);
+
+  await supabase.from("company_members").insert([
+    {
+      userId,
+      companyId,
+      role: "employee",
+    },
+  ]);
+
+  await supabase.from("users").update({ companyId }).eq("id", userId);
+
+  const company = await supabase
+    .from("companies")
+    .select("name")
+    .eq("id", companyId)
+    .single();
+  await notifyRequestApproved(userId, company.data?.name);
+
+  revalidatePath("/company");
+}
+
+export async function rejectRequestAction(requestId: number) {
+  const { error } = await supabase
+    .from("company_requests")
+    .update({ status: "rejected" })
+    .eq("id", requestId);
+
+  if (error) throw new Error("Could not reject request");
+  revalidatePath("/company");
+}
+
+export async function updateMemberRoleAction(memberId: number, role: Role) {
+  const { error } = await supabase
+    .from("company_members")
+    .update({ role })
+    .eq("id", memberId);
+
+  if (error) throw new Error("Could not update role");
+  revalidatePath("/company");
+}
+
+export async function removeMemberAction(memberId: number) {
+  const { data } = await supabase
+    .from("company_members")
+    .select("userId")
+    .eq("id", memberId)
+    .single();
+
+  const { error } = await supabase
+    .from("company_members")
+    .delete()
+    .eq("id", memberId);
+
+  if (error) throw new Error("Could not remove member");
+
+  if (data?.userId) {
+    await supabase
+      .from("users")
+      .update({ companyId: null })
+      .eq("id", data.userId);
+  }
+
+  revalidatePath("/company");
+}
+
+export async function markAllNotificationsReadAction(userId: number) {
+  await supabase
+    .from("notifications")
+    .update({ read: true })
+    .eq("userId", userId);
+
+  revalidatePath("/");
+}
+
+export async function updateProfileAction(userId: number, formData: FormData) {
+  const name = formData.get("name") as string;
+  const avatarFile = formData.get("avatar") as File;
+
+  const updates: { name: string; avatar?: string } = { name };
+
+  if (avatarFile && avatarFile.size > 0) {
+    const imageName = `${Date.now()}-${avatarFile.name.replaceAll(" ", "-")}`;
+
+    const { error: storageError } = await supabase.storage
+      .from("avatars")
+      .upload(imageName, avatarFile, { upsert: true });
+
+    if (storageError) throw new Error("Could not upload avatar");
+
+    updates.avatar = `https://abulhbcdlpdnicszsgzs.supabase.co/storage/v1/object/public/avatars/${imageName}`;
+  }
+
+  const { error } = await supabase
+    .from("users")
+    .update(updates)
+    .eq("id", userId);
+
+  if (error) throw new Error("Could not update profile");
+
+  revalidatePath("/account");
+}
+
+export async function deleteAccountAction(userId: number) {
+  await supabase.from("company_members").delete().eq("userId", userId);
+  await supabase.from("project_members").delete().eq("userId", userId);
+  await supabase.from("suggestion_votes").delete().eq("user_id", userId);
+  await supabase.from("notifications").delete().eq("userId", userId);
+  await supabase.from("suggestions").delete().eq("authorId", userId);
+
+  const { error } = await supabase.from("users").delete().eq("id", userId);
+  if (error) throw new Error("Could not delete account");
+
+  await signOut({ redirectTo: "/" });
 }

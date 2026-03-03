@@ -1,15 +1,17 @@
 import Link from "next/link";
 import { auth } from "../_lib/auth";
 import Image from "next/image";
+import { getUserById } from "../_lib/data-service";
 
 export default async function User() {
   const session = await auth();
+  const user = await getUserById(Number(session?.user?.id));
   return (
     <div>
       {session?.user?.image ? (
         <Link href="/account">
           <Image
-            src={session?.user.image}
+            src={user.avatar}
             height={30}
             width={30}
             alt={`Avatar of ${session?.user.name}`}

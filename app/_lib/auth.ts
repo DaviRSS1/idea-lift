@@ -20,7 +20,6 @@ const config: NextAuthConfig = {
         await createUser({
           name: user.name,
           email: user.email,
-          role: "employee",
           avatar: user.image,
         });
       }

@@ -34,7 +34,7 @@ export default function ProjectsSection({
       ) : projects.length ? (
         <ProjectsList projects={projects} />
       ) : (
-        <p className="text-zinc-500 text-sm">No projects found.</p>
+        <p className="text-zinc-500 text-sm mt-5 mb-8">No projects found.</p>
       )}
     </section>
   );

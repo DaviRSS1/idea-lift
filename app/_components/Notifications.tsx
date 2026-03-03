@@ -1,18 +1,17 @@
-import Link from "next/link";
-import { IoMdNotificationsOutline } from "react-icons/io";
+import { auth } from "../_lib/auth";
+import { getUnreadNotifications } from "../_lib/data-service";
+import NotificationsClient from "./NotificationsClient";
 
-export default function Notifications() {
+export default async function Notifications() {
+  const session = await auth();
+  if (!session?.user?.id) return null;
+
+  const unread = await getUnreadNotifications(Number(session.user.id));
+
   return (
-    <div
-      className="
-      flex 
-      items-center 
-      justify-center
-    "
-    >
-      <Link href="/notifications" className="hover:text-lime-600">
-        <IoMdNotificationsOutline size={30} />
-      </Link>
-    </div>
+    <NotificationsClient
+      unreadCount={unread.length}
+      userId={Number(session.user.id)}
+    />
   );
 }
