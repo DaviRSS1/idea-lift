@@ -3,7 +3,6 @@ import { supabase } from "@/app/_lib/supabase";
 
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q");
-  const userId = req.nextUrl.searchParams.get("userId");
 
   if (!q || q.length < 2) return NextResponse.json([]);
 
