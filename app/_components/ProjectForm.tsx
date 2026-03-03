@@ -73,6 +73,11 @@ export default function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const router = useRouter();
 
   async function handleSubmit(formData: FormData) {
+    if (features.length === 0) {
+      toast.error("Add at least one feature before submitting");
+      return;
+    }
+
     startTransition(async () => {
       try {
         let result;
@@ -90,7 +95,6 @@ export default function ProjectForm({ initialData, mode }: ProjectFormProps) {
           toast.success("Project created successfully");
         }
 
-        // O isPending continuará true enquanto a página não terminar de carregar
         router.push(`/projects/${result.id}`);
       } catch (error) {
         toast.error("Something went wrong");

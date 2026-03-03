@@ -4,6 +4,12 @@ import { revalidatePath } from "next/cache";
 import { auth } from "../_lib/auth";
 import { FeatureInput } from "../_types/projectsFeatures";
 import { supabase } from "./supabase";
+import {
+  createSuggestion,
+  deleteProject,
+  voteSuggestion,
+  VoteValue,
+} from "./data-service";
 
 export async function createProject(
   formData: FormData,
@@ -248,4 +254,25 @@ export async function updateProject(
   revalidatePath("/projects");
 
   return { id: projectId, project };
+}
+
+export async function deleteProjectAction(projectID: number) {
+  await deleteProject(projectID);
+}
+
+export async function createSuggestionAction(
+  projectID: number,
+  content: string,
+  authorId: number,
+) {
+  await createSuggestion(projectID, content, authorId);
+  revalidatePath("/projects");
+}
+
+export async function voteSuggestionAction(
+  suggestionId: number,
+  userId: number,
+  vote: VoteValue,
+) {
+  return await voteSuggestion(suggestionId, userId, vote);
 }

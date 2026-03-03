@@ -143,7 +143,8 @@ export async function getProjectSuggestions(projectId: number) {
   const { data, error } = await supabase
     .from("suggestions")
     .select("*")
-    .eq("projectId", projectId);
+    .eq("projectId", projectId)
+    .order("upvotesCount", { ascending: false });
 
   if (error) {
     throw new Error("suggestions could not be loaded");
@@ -163,4 +164,88 @@ export async function createUser(newUser: object) {
   }
 
   return data;
+}
+
+export async function createSuggestion(
+  projectID: number,
+  content: string,
+  authorId: number,
+) {
+  const { error } = await supabase.from("suggestions").insert([
+    {
+      projectId: projectID,
+      content,
+      authorId,
+      upvotesCount: 0,
+    },
+  ]);
+
+  if (error) {
+    console.error(error);
+    throw new Error("Failed to create suggestion");
+  }
+}
+
+//////// UPDATE
+
+export type VoteValue = 1 | -1 | 0;
+
+export async function voteSuggestion(
+  suggestionId: number,
+  userId: number,
+  vote: VoteValue,
+) {
+  if (vote === 0) {
+    await supabase
+      .from("suggestion_votes")
+      .delete()
+      .eq("suggestion_id", suggestionId)
+      .eq("user_id", userId);
+  } else {
+    await supabase
+      .from("suggestion_votes")
+      .upsert(
+        { suggestion_id: suggestionId, user_id: userId, vote },
+        { onConflict: "suggestion_id,user_id" },
+      );
+  }
+
+  const { data: voteData, error: sumError } = await supabase
+    .from("suggestion_votes")
+    .select("vote")
+    .eq("suggestion_id", suggestionId);
+
+  if (sumError) throw new Error("Erro ao calcular votos");
+
+  const newScore = voteData?.reduce((acc, curr) => acc + curr.vote, 0) ?? 0;
+
+  const { error: updateError } = await supabase
+    .from("suggestions")
+    .update({ upvotesCount: newScore })
+    .eq("id", suggestionId);
+
+  if (updateError) throw new Error("Erro ao atualizar saldo");
+
+  return { newScore };
+}
+
+//////// DELETE
+
+export async function deleteProject(projectID: number) {
+  // 1. Delete members
+  let { error } = await supabase
+    .from("project_members")
+    .delete()
+    .eq("projectId", projectID);
+  if (error) throw error;
+
+  // 2. Delete features
+  error = (
+    await supabase.from("projects_features").delete().eq("projectId", projectID)
+  ).error;
+  if (error) throw error;
+
+  // 3. Delete project
+  error = (await supabase.from("projects").delete().eq("id", projectID)).error;
+  if (error) throw error;
 }

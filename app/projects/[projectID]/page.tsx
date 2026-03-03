@@ -1,4 +1,6 @@
+import AddSuggestionForm from "@/app/_components/AddSuggestionForm";
 import Button from "@/app/_components/Button";
+import ButtonDelete from "@/app/_components/ButtonDelete";
 import CardFeatures from "@/app/_components/CardFeatures";
 import ProjectProgress from "@/app/_components/ProjectProgress";
 import Spinner from "@/app/_components/Spinner";
@@ -78,9 +80,12 @@ export default async function Page({ params }: Props) {
           </div>
         </div>
         {canEdit && (
-          <Link href={`/projects/${projectID}/edit`}>
-            <Button>Edit</Button>
-          </Link>
+          <div className="flex gap-2">
+            <Link href={`/projects/${projectID}/edit`}>
+              <Button className="h-10">Edit</Button>
+            </Link>
+            <ButtonDelete projectID={projectID} className="h-10" />
+          </div>
         )}
       </div>
 
@@ -109,10 +114,18 @@ export default async function Page({ params }: Props) {
         </div>
       </div>
 
-      <section className="mt-12">
+      <section className="mt-12 space-y-4">
         <h3 className="mb-3 text-sm font-semibold text-zinc-700 uppercase tracking-wide">
           Suggestions
         </h3>
+
+        {session?.user && (
+          <AddSuggestionForm
+            projectID={Number(projectID)}
+            authorId={Number(session.user.id)}
+          />
+        )}
+
         <Suspense fallback={<Spinner />}>
           <Suggestions projectID={projectID} />
         </Suspense>
